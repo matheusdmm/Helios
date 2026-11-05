@@ -1,0 +1,11 @@
+.env
+node_modules/
+data/
+public/app.js
+.bun-tmp/
+certs/
+tools/
+docs/
+LANGUAGE.md
+screenshots/
+

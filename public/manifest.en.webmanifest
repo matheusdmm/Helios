@@ -1,0 +1,15 @@
+{
+  "name": "Helios — Solar Monitor",
+  "short_name": "Helios",
+  "description": "Track solar production on your local network and view the last offline copy.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f2e9",
+  "theme_color": "#171715",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

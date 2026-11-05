@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#171715">
+    <meta name="description" content="Helios: painel local de monitoramento de energia solar.">
+    <title>Helios</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/helios.css">
+    <script src="/app.js" defer></script>
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="Navegação">
+            <a class="brand" href="#overview" aria-label="Helios, início"><img class="brand-mark" src="/favicon.svg"
+                    width="37" height="37" alt=""><span>HELIOS</span></a>
+            <div class="sidebar-section">Painel solar</div>
+            <nav>
+                <a class="nav-link active" href="#overview"><span class="nav-icon">◫</span>Visão geral</a>
+                <a class="nav-link" href="#historico"><span class="nav-icon">⌁</span>Histórico</a>
+                <a class="nav-link" href="#analises"><span class="nav-icon">◷</span>Análises</a>
+                <a class="nav-link" href="#dispositivo"><span class="nav-icon">▤</span>Equipamento</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="sidebar-caption">brilhe<br>como<br>o<br>sol.</div>
+                <div class="sidebar-foot">HELIO<br>S6-GR1P6K · S3-WIFI-ST</div>
+            </div>
+        </aside>
+
+        <main id="overview" class="main">
+            <header class="topbar">
+                <div class="mobile-brand"><img src="/favicon.svg" width="27" height="27" alt=""> <strong>HELIOS</strong>
+                </div>
+                <div class="breadcrumb">HELIOS <span>/</span>Visão geral da geração</div>
+                <div class="topbar-right">
+                    <span id="sync-label" class="sync-label">Carregando…</span>
+                    <label class="language-picker" for="language" aria-label="Idioma"><span class="sr-only">Idioma</span><select id="language" aria-label="Idioma"><option value="pt-BR">PT</option><option value="en">EN</option></select></label>
+                    <button id="settings-toggle" class="settings-toggle" type="button">Dispositivos</button>
+                    <button id="refresh" class="icon-button" type="button" aria-label="Atualizar agora"
+                        title="Atualizar agora">↻</button>
+                </div>
+            </header>
+
+            <nav class="mobile-nav" aria-label="Navegação móvel">
+                <a href="#overview">Visão geral</a>
+                <a href="#historico">Histórico</a>
+                <a href="#analises">Análises</a>
+                <a href="#dispositivo">Equipamento</a>
+            </nav>
+
+            <div class="page-content">
+                <div id="notice" class="notice" hidden></div>
+                <div id="offline-banner" class="offline-banner" role="status" hidden></div>
+                <div id="wizard-backdrop" class="wizard-backdrop" hidden>
+                    <section id="setup" class="setup wizard" role="dialog" aria-modal="true"
+                        aria-labelledby="setup-title">
+                        <button id="wizard-close" class="wizard-close" type="button"
+                            aria-label="Fechar assistente">×</button>
+                        <div id="wizard-discovery" class="wizard-step">
+                            <p class="eyebrow">ETAPA 1 DE 2 · DISPOSITIVO</p>
+                            <h2 id="setup-title">Encontre o coletor</h2>
+                            <p>Selecione o S3-WIFI-ST na lista. O MAC é uma pista; a resposta Solis confirma o coletor.
+                                Outros endereços não recebem a senha.</p>
+                            <div class="wizard-actions"><button id="scan" class="scan-button" type="button">Buscar
+                                    novamente</button><span id="scan-status" role="status"></span></div>
+                            <div id="scan-results" class="scan-results" aria-live="polite"></div>
+                            <div class="manual-device"><label for="manual-ip">Ou informe o IP manualmente</label>
+                                <div><input id="manual-ip" type="text" inputmode="decimal" autocomplete="off"
+                                        placeholder="192.168.15.9"><button id="manual-next"
+                                        type="button">Continuar</button></div>
+                            </div>
+                        </div>
+                        <div id="wizard-auth" class="wizard-step" hidden>
+                            <button id="wizard-back" class="wizard-back" type="button">← Voltar aos
+                                dispositivos</button>
+                            <p class="eyebrow">ETAPA 2 DE 2 · ACESSO</p>
+                            <h2>Conectar ao S3-WIFI-ST</h2>
+                            <p id="selected-device">—</p>
+                            <form id="setup-form"><label for="setup-ip">IP do coletor</label><input id="setup-ip"
+                                    type="text" readonly required>
+                                <div class="credential-hint" role="note"><strong>Qual senha usar?</strong><span>Depois
+                                        de entrar no Wi-Fi da casa, alguns S3-WIFI-ST passam a usar a <strong>senha
+                                            desse Wi-Fi</strong> para abrir a página local do coletor. Use a senha que
+                                        funciona nessa página.</span></div>
+                                <label for="setup-password">Senha da página do
+                                    coletor</label><input id="setup-password" type="password"
+                                    autocomplete="new-password" placeholder="Digite a senha local">
+                                <p class="password-note">Deixe em branco apenas para reutilizar a senha salva neste
+                                    computador.</p>
+                                <button type="submit">Conectar</button><span id="setup-message" class="setup-message"
+                                    role="status"></span>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+                <section class="intro" aria-labelledby="page-title">
+                    <div>
+                        <p class="eyebrow">01 / MONITORAMENTO</p>
+                        <h1 id="page-title">Visão geral</h1>
+                        <p class="intro-subtitle">Acompanhe a geração e o estado do seu inversor.</p>
+                    </div>
+                    <div id="status" class="status"><span class="status-dot"></span><span
+                            id="status-text">Conectando</span></div>
+                </section>
+
+                <section class="power-section" aria-label="Geração atual">
+                    <div class="power-main">
+                        <p class="metric-label">POTÊNCIA AGORA</p>
+                        <div class="power-value"><span id="power">—</span><span class="power-unit">kW</span></div>
+                        <p id="power-caption" class="power-caption">Leitura em tempo real do inversor</p>
+                    </div>
+                    <div class="capacity-visual" aria-label="Uso da capacidade nominal">
+                        <svg class="gauge" viewBox="0 0 180 180" aria-hidden="true">
+                            <circle cx="90" cy="90" r="68" class="gauge-track" />
+                            <circle id="gauge-fill" cx="90" cy="90" r="68" class="gauge-fill" />
+                        </svg>
+                        <div class="gauge-center"><strong id="capacity-percent">—</strong><small>de 6,0 kW</small></div>
+                    </div>
+                </section>
+
+                <section class="metrics" aria-label="Energia gerada">
+                    <div class="metric"><span>Hoje</span><strong id="today">—</strong><small>kWh gerados</small></div>
+                    <div class="metric"><span>Este mês</span><strong id="month">—</strong><small>kWh registrados</small>
+                    </div>
+                    <div class="metric"><span>Desde o início</span><strong id="total">—</strong><small>kWh
+                            acumulados</small></div>
+                </section>
+                <details class="trust-details">
+                    <summary>Como estes números são obtidos</summary>
+                    <div>
+                        <p><strong>Direto do coletor:</strong> potência, energia de hoje, temperatura e alerta,
+                            consultados aproximadamente a cada minuto.</p>
+                        <p><strong>Calculado pelo painel:</strong> pico observado, comparações, energia mensal e valor
+                            estimado. Esses indicadores dependem das leituras guardadas neste computador; lacunas no
+                            histórico ficam vazias.</p>
+                        <p><strong>Limite atual:</strong> a energia acumulada não aparece quando o coletor devolve um
+                            valor inválido. O painel não substitui um medidor certificado nem foi calibrado com a sua
+                            fatura.</p>
+                    </div>
+                </details>
+
+                <section id="analises" class="insights-section" aria-labelledby="insights-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">CONTEXTO</p>
+                            <h2 id="insights-title">Como está a geração</h2>
+                        </div><span id="history-scope" class="section-note">Histórico local</span>
+                    </div>
+                    <div class="insights-grid">
+                        <div><span>Ontem</span><strong id="yesterday">—</strong><small id="yesterday-delta">Sem
+                                histórico anterior</small></div>
+                        <div><span>Média dos últimos 7 dias</span><strong id="average-seven">—</strong><small
+                                id="average-coverage">Dias completos registrados</small></div>
+                        <div><span>Pico de potência hoje</span><strong id="peak-power">—</strong><small
+                                id="peak-time">Aguardando leituras</small></div>
+                        <div><span>Tempo com geração observada</span><strong
+                                id="generation-time">—</strong><small>Minutos registrados acima de 50 W</small></div>
+                    </div>
+                </section>
+
+                <section id="historico" class="chart-section" aria-labelledby="chart-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">DESEMPENHO</p>
+                            <h2 id="chart-title">Geração ao longo do tempo</h2>
+                        </div>
+                        <div class="chart-controls" role="group" aria-label="Período do gráfico">
+                            <button class="period active" data-period="day" type="button">Dia</button>
+                            <button class="period" data-period="month" type="button">Mês</button>
+                            <button class="period" data-period="year" type="button">Ano</button>
+                        </div>
+                    </div>
+                    <div class="chart-context"><span id="chart-date">—</span><span id="chart-unit">Potência · kW</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <div id="chart" class="chart" role="img" aria-label="Gráfico de geração"></div>
+                    </div>
+                    <p id="chart-empty" class="chart-empty" hidden>O histórico será preenchido conforme novas leituras
+                        forem registradas.</p>
+                </section>
+
+                <section class="calendar-section" aria-labelledby="calendar-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">HISTÓRICO DIÁRIO</p>
+                            <h2 id="calendar-title">Geração no mês</h2>
+                        </div>
+                        <div class="calendar-navigation" aria-label="Navegar pelos meses">
+                            <button id="calendar-prev" type="button" aria-label="Mês anterior">←</button>
+                            <label class="sr-only" for="calendar-picker">Escolher mês</label>
+                            <input id="calendar-picker" type="month" aria-label="Escolher mês">
+                            <button id="calendar-next" type="button" aria-label="Próximo mês">→</button>
+                            <button id="calendar-today" type="button">Mês atual</button>
+                        </div>
+                    </div>
+                    <p id="calendar-month" class="calendar-month-label">—</p>
+                    <div id="calendar" class="calendar" aria-label="Geração diária no mês"></div>
+                    <p id="calendar-note" class="section-footnote">Selecione um dia para ver a curva de geração. Dias sem leitura ficam em branco.</p>
+                    <p id="calendar-selection" class="calendar-selection" aria-live="polite"></p>
+                </section>
+
+                <section class="forecast-section" aria-labelledby="forecast-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">PRÓXIMOS 7 DIAS</p>
+                            <h2 id="forecast-title">Previsão de geração</h2>
+                        </div>
+                        <span class="section-note">Estimativa pelo histórico</span>
+                    </div>
+                    <div class="forecast-summary">
+                        <div><span>TOTAL ESTIMADO</span><strong id="forecast-total">—</strong><small>kWh em 7 dias</small></div>
+                        <div><span>FAIXA HISTÓRICA</span><strong id="forecast-range">—</strong><small>kWh em 7 dias</small></div>
+                    </div>
+                    <div id="forecast-days" class="forecast-days" role="list" aria-label="Previsão diária"></div>
+                    <p id="forecast-note" class="section-footnote">Aguardando histórico para calcular a previsão.</p>
+                </section>
+
+                <section class="temperature-section" aria-labelledby="temperature-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">COMPORTAMENTO</p>
+                            <h2 id="temperature-title">Temperatura e potência hoje</h2>
+                        </div><span id="temperature-range" class="section-note">—</span>
+                    </div>
+                    <div class="temperature-legend"><span><i class="legend-temp"></i> Temperatura</span><span><i
+                                class="legend-power"></i> Potência</span></div>
+                    <div id="temperature-chart" class="temperature-chart" role="img"
+                        aria-label="Temperatura e potência ao longo do dia"></div>
+                    <p id="temperature-empty" class="chart-empty" hidden>O gráfico aparecerá após as primeiras leituras.
+                    </p>
+                </section>
+
+                <div class="utility-grid">
+                    <section class="health-section" aria-labelledby="health-title">
+                        <div class="section-heading lower-heading">
+                            <div>
+                                <p class="eyebrow">CONEXÃO</p>
+                                <h2 id="health-title">Leituras do coletor</h2>
+                            </div>
+                        </div>
+                        <dl class="device-list">
+                            <div>
+                                <dt>Última leitura válida</dt>
+                                <dd id="health-last">—</dd>
+                            </div>
+                            <div>
+                                <dt>Tempo sem leitura</dt>
+                                <dd id="health-gap">—</dd>
+                            </div>
+                            <div>
+                                <dt>Sucesso nas últimas 24 h</dt>
+                                <dd id="health-rate">—</dd>
+                            </div>
+                            <div>
+                                <dt>Falhas registradas</dt>
+                                <dd id="health-failures">—</dd>
+                            </div>
+                        </dl>
+                        <p id="health-note" class="section-footnote">A taxa considera somente as tentativas feitas
+                            enquanto o painel estava ligado.</p>
+                    </section>
+                    <section class="value-section" aria-labelledby="value-title">
+                        <div class="section-heading lower-heading">
+                            <div>
+                                <p class="eyebrow">ESTIMATIVA</p>
+                                <h2 id="value-title">Valor da energia gerada</h2>
+                            </div>
+                        </div>
+                        <div class="value-metrics">
+                            <div><span>Hoje</span><strong id="value-today">—</strong></div>
+                            <div><span>Este mês</span><strong id="value-month">—</strong></div>
+                        </div>
+                        <form id="tariff-form" class="tariff-form"><label for="tariff">Tarifa de referência
+                                (R$/kWh)</label>
+                            <div><input id="tariff" type="text" inputmode="decimal" autocomplete="off"
+                                    placeholder="Ex.: 0,90"><button type="submit">Salvar</button></div><span
+                                id="tariff-message" role="status"></span>
+                        </form>
+                        <p id="value-note" class="section-footnote">Valor bruto estimado pela energia produzida. A
+                            economia real depende
+                            do consumo e da compensação na rede.</p>
+                    </section>
+                </div>
+
+                <section id="data-section" class="data-section" aria-labelledby="data-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">DADOS</p>
+                            <h2 id="data-title">Importar e exportar leituras</h2>
+                        </div><span class="section-note">CSV · Excel e LibreOffice</span>
+                    </div>
+                    <p class="section-footnote">Exporte as leituras registradas neste computador. Ao importar um CSV do
+                        painel, os registros existentes são preservados e as duplicatas são ignoradas.</p>
+                    <div class="data-actions"><a href="/api/export.csv?scope=all" download>Backup completo</a><a
+                            href="/api/export.csv?scope=month" download>Backup deste mês</a><a
+                            href="/api/export.csv?scope=summary" download>Resumo diário</a></div>
+                    <form id="import-form" class="import-form"><label for="import-file">Importar backup CSV</label>
+                        <div><input id="import-file" type="file" accept=".csv,text/csv" required><button
+                                type="submit">Importar leituras</button></div><span id="import-message"
+                            role="status"></span>
+                    </form>
+                    <p class="section-footnote">O resumo diário é para análise em planilhas. Para restaurar dados no
+                        painel, importe um arquivo de backup de leituras.</p>
+                </section>
+
+                <div class="lower-grid">
+                    <section id="dispositivo" class="device-section" aria-labelledby="device-title">
+                        <div class="section-heading lower-heading">
+                            <div>
+                                <p class="eyebrow">EQUIPAMENTO</p>
+                                <h2 id="device-title">Inversor</h2>
+                            </div><span class="device-tag">S3-WIFI-ST</span>
+                        </div>
+                        <dl class="device-list">
+                            <div>
+                                <dt>Modelo</dt>
+                                <dd id="model">S6-GR1P6K</dd>
+                            </div>
+                            <div>
+                                <dt>Número de série</dt>
+                                <dd id="serial">—</dd>
+                            </div>
+                            <div>
+                                <dt>Temperatura</dt>
+                                <dd id="temperature">—</dd>
+                            </div>
+                            <div>
+                                <dt>Firmware do coletor</dt>
+                                <dd id="firmware">—</dd>
+                            </div>
+                            <div>
+                                <dt>Última leitura</dt>
+                                <dd id="last-reading">—</dd>
+                            </div>
+                        </dl>
+                    </section>
+                    <section class="events-section" aria-labelledby="events-title">
+                        <div class="section-heading lower-heading">
+                            <div>
+                                <p class="eyebrow">ATIVIDADE</p>
+                                <h2 id="events-title">Estado e alertas</h2>
+                            </div>
+                        </div>
+                        <div id="event-content" class="event-content"><span class="event-symbol">✓</span>
+                            <div><strong>Nenhum alerta ativo</strong>
+                                <p>O coletor não informou falhas.</p>
+                            </div>
+                        </div>
+                        <p class="events-note">O S3-WIFI-ST fornece um alerta resumido. Dados elétricos detalhados
+                            exigem outro método de leitura.</p>
+                    </section>
+                </div>
+                <footer class="footer"><strong>HELIOS</strong><span>Painel local · Dados lidos diretamente do coletor na
+                        sua rede</span></footer>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
