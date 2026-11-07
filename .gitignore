@@ -2,6 +2,7 @@
 node_modules/
 data/
 public/app.js
+dist/
 .bun-tmp/
 certs/
 tools/

@@ -17,10 +17,11 @@ import type { ConnectionEvent, Reading, Sample } from './lib/types.ts';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(root, 'public');
+const writableRoot = Bun.isStandaloneExecutable ? path.dirname(process.execPath) : root;
 
 function loadEnv() {
   try {
-    for (const line of readFileSync(path.join(root, '.env'), 'utf8').split(/\r?\n/)) {
+    for (const line of readFileSync(path.join(writableRoot, '.env'), 'utf8').split(/\r?\n/)) {
       const match = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
       if (!match || Object.hasOwn(process.env, match[1])) continue;
       let value = match[2].trim();
@@ -30,7 +31,7 @@ function loadEnv() {
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
 loadEnv();
-const dataDir = path.resolve(root, process.env.HELIOS_DATA_DIR || 'data');
+const dataDir = path.resolve(writableRoot, process.env.HELIOS_DATA_DIR || 'data');
 const settingsFile = path.join(dataDir, 'local-settings.json');
 
 const config = {
@@ -400,8 +401,8 @@ if (Boolean(config.httpsCert) !== Boolean(config.httpsKey)) {
 const secure = Boolean(config.httpsCert);
 const server = secure
   ? https.createServer({
-      cert: readFileSync(path.resolve(root, config.httpsCert)),
-      key: readFileSync(path.resolve(root, config.httpsKey)),
+      cert: readFileSync(path.resolve(writableRoot, config.httpsCert)),
+      key: readFileSync(path.resolve(writableRoot, config.httpsKey)),
     }, handleRequest)
   : http.createServer(handleRequest);
 

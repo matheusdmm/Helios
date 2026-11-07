@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun build ./public/app.ts --target browser --outfile ./public/app.js",
+    "build:exe": "bun run build && bun build ./server.ts --compile --asset ./public --windows-icon=./public/helios.ico --outfile ./dist/helios.exe",
     "start": "bun run build && bun ./server.ts",
     "dev": "bun run build && bun --watch ./server.ts",
     "check": "tsc --noEmit",

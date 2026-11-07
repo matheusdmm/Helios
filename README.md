@@ -33,6 +33,12 @@ bun test        # Run tests
 bun run dev     # Watch the server
 ```
 
+## Windows executable
+
+Run `bun run build:exe` on Windows. The result is `dist/helios.exe`, with the browser files embedded and the same Martell sun icon as the dashboard. Copy that one file to a writable folder on the target computer and double-click it. Bun and `node_modules` are not needed there. Open `http://127.0.0.1:3000` in a browser; keep the console window open while using the dashboard.
+
+The executable starts with sample data. To configure a logger or change the port, place a `.env` file beside `helios.exe` (you can copy `.env.example` as a starting point). Settings and readings are stored in a `data/` folder beside the executable. Choose a folder where your Windows user can write files.
+
 ## Credit
 
 The logo uses [House Martell.svg](https://awoiaf.westeros.org/index.php/File:House_Martell.svg) by [Abjiklam](https://awoiaf.westeros.org/index.php/User:Abjiklam), licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). The app icons use the same license.
