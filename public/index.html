@@ -22,10 +22,10 @@
                     width="37" height="37" alt=""><span>HELIOS</span></a>
             <div class="sidebar-section">Painel solar</div>
             <nav>
-                <a class="nav-link active" href="#overview"><span class="nav-icon">◫</span>Visão geral</a>
-                <a class="nav-link" href="#historico"><span class="nav-icon">⌁</span>Histórico</a>
-                <a class="nav-link" href="#analises"><span class="nav-icon">◷</span>Análises</a>
-                <a class="nav-link" href="#dispositivo"><span class="nav-icon">▤</span>Equipamento</a>
+                <a class="nav-link active" href="#overview" aria-current="location"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Visão geral</a>
+                <a class="nav-link" href="#analises"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 19h17"/><path d="m8 15 4-5 3 2 5-6"/></svg>Análises</a>
+                <a class="nav-link" href="#historico"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Histórico</a>
+                <a class="nav-link" href="#dispositivo"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Equipamento</a>
             </nav>
             <div class="sidebar-bottom">
                 <div class="sidebar-caption">brilhe<br>como<br>o<br>sol.</div>
@@ -37,7 +37,7 @@
             <header class="topbar">
                 <div class="mobile-brand"><img src="/favicon.svg" width="27" height="27" alt=""> <strong>HELIOS</strong>
                 </div>
-                <div class="breadcrumb">HELIOS <span>/</span>Visão geral da geração</div>
+                <div class="breadcrumb">HELIOS <span>/</span><span id="breadcrumb-current">Visão geral da geração</span></div>
                 <div class="topbar-right">
                     <span id="sync-label" class="sync-label">Carregando…</span>
                     <label class="language-picker" for="language" aria-label="Idioma"><span class="sr-only">Idioma</span><select id="language" aria-label="Idioma"><option value="pt-BR">PT</option><option value="en">EN</option></select></label>
@@ -48,9 +48,9 @@
             </header>
 
             <nav class="mobile-nav" aria-label="Navegação móvel">
-                <a href="#overview">Visão geral</a>
-                <a href="#historico">Histórico</a>
+                <a href="#overview" class="active" aria-current="location">Visão geral</a>
                 <a href="#analises">Análises</a>
+                <a href="#historico">Histórico</a>
                 <a href="#dispositivo">Equipamento</a>
             </nav>
 

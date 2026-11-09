@@ -12,9 +12,9 @@ bun install
 bun run start
 ```
 
-Open `http://127.0.0.1:3000`. Click **Devices**, select the data logger, and enter the password for its local web page. You can also set `S3_IP` and `S3_PASSWORD` in `.env`.
+Open `http://127.0.0.1:3000`. Click **Devices**, select the data logger, and enter the password for its local web page. You can also set `S3_IP` and `S3_PASSWORD` in `.env`; with only `S3_PASSWORD`, Helios discovers the logger automatically. Credentials entered in the panel are saved in `data/local-settings.json` and take precedence over nonempty `.env` values on later starts.
 
-Helios reads `http://LOGGER_IP/inverter.cgi` about once a minute and saves readings in `data/`. Without a configured logger, the dashboard shows labeled sample data. If a connected logger stops responding, the dashboard shows an error and keeps the last reading.
+Helios reads `http://LOGGER_IP/inverter.cgi` about once a minute and saves readings in `data/`. Without a configured logger, the dashboard shows labeled sample data. If a connected logger stops responding, Helios keeps the last reading and scans the local network automatically (at most once every two minutes). When it identifies the same collector at a new IP, it reconnects with the locally saved password and updates the saved IP. The computer must remain on the same local network; this does not reconnect a disconnected Wi-Fi connection.
 
 ## Notes
 

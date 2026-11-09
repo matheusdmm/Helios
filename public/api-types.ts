@@ -8,6 +8,7 @@ export interface PublicConfig extends Record<string, unknown> {
   timeZone: string;
   canManage: boolean;
   configured?: boolean;
+  hasPassword?: boolean;
   needsPassword?: boolean;
   ip?: string;
   mac?: string;

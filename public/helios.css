@@ -61,10 +61,11 @@ button:disabled { cursor: wait; }
   text-transform: uppercase;
 }
 .sidebar-section { margin: 43px 3px 14px; color: #9d9277; }
-.sidebar nav { gap: 2px; }
+.sidebar nav { gap: 4px; }
 .nav-link {
-  gap: 13px;
-  padding: 12px 12px;
+  min-height: 46px;
+  gap: 12px;
+  padding: 10px 12px;
   border: 1px solid transparent;
   border-left: 3px solid transparent;
   border-radius: 0;
@@ -73,14 +74,14 @@ button:disabled { cursor: wait; }
   font-weight: 700;
   transition: color .15s, background .15s, border-color .15s;
 }
-.nav-link:hover { background: #292823; color: #fff; }
+.nav-link:not(.active):hover { background: #343229; color: var(--paper); }
 .nav-link.active,
 .nav-link.active:hover {
-  background: #282720;
+  background: #393323;
   border-left-color: var(--accent);
-  color: var(--accent);
+  color: #f0d797;
 }
-.nav-icon { width: 20px; font-size: 19px; font-weight: 400; }
+.nav-icon { display: block; flex: none; width: 18px; height: 18px; }
 .sidebar-bottom { padding: 0 3px; }
 .sidebar-caption {
   font-size: 26px;
@@ -109,7 +110,7 @@ button:disabled { cursor: wait; }
   font: 700 10px "Courier New", ui-monospace, monospace;
   letter-spacing: .075em;
 }
-.breadcrumb span { padding: 0 10px; color: #a78a4c; }
+.breadcrumb > span:first-child { padding: 0 10px; color: #a78a4c; }
 .topbar-right { gap: 12px; }
 .language-picker select {
   border: 1px solid var(--ink);
@@ -419,10 +420,14 @@ button.calendar-day:hover { transform: translateY(-2px); outline: 2px solid var(
     flex: none;
     padding: 12px 14px;
     border-right: 1px solid var(--line);
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
     font: 700 10px "Courier New", ui-monospace, monospace;
     text-transform: uppercase;
+    transition: color .15s, background .15s, border-color .15s;
   }
-  .mobile-nav a:hover { background: var(--gold-pale); }
+  .mobile-nav a:not(.active):hover { background: var(--gold-pale); color: var(--ink); }
+  .mobile-nav a.active { border-bottom-color: var(--accent); color: var(--ink); background: var(--gold-pale); }
   .page-content { padding: 27px 18px 20px; }
   h1 { font-size: 34px; }
   .intro-subtitle { max-width: 250px; }

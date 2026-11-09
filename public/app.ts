@@ -46,6 +46,54 @@ function timeLabel(timestamp) {
 
 function setText(id, value) { $(id).textContent = value; }
 
+function setupNavigation() {
+  // Keep the section order aligned with the document, including when scrolling without clicking.
+  const sections = ['overview', 'analises', 'historico', 'dispositivo'] as const;
+  type Section = typeof sections[number];
+  const labels: Record<Section, string> = {
+    overview: 'Visão geral da geração',
+    analises: 'Análises',
+    historico: 'Histórico',
+    dispositivo: 'Equipamento',
+  };
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.sidebar nav a, .mobile-nav a')];
+  let active: Section = 'overview';
+  const setActive = (section: Section) => {
+    active = section;
+    for (const link of links) {
+      const selected = link.hash === `#${section}`;
+      link.classList.toggle('active', selected);
+      if (selected) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+    setText('breadcrumb-current', t(labels[section]));
+  };
+  const syncToScroll = () => {
+    const marker = window.innerHeight * .38;
+    let visible: Section = 'overview';
+    for (const section of sections.slice(1)) {
+      if ($(section).getBoundingClientRect().top <= marker) visible = section;
+    }
+    const atBottom = window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    if (atBottom && $('dispositivo').getBoundingClientRect().top < window.innerHeight) visible = 'dispositivo';
+    setActive(visible);
+  };
+  let scheduled = false;
+  const scheduleSync = () => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; syncToScroll(); });
+  };
+  for (const link of links) link.addEventListener('click', () => setActive(link.hash.slice(1) as Section));
+  window.addEventListener('scroll', scheduleSync, { passive: true });
+  window.addEventListener('resize', scheduleSync);
+  window.addEventListener('hashchange', scheduleSync);
+  const hash = location.hash.slice(1);
+  setActive(sections.includes(hash as Section) ? hash as Section : 'overview');
+  scheduleSync();
+  return { refresh: () => setActive(active), sync: scheduleSync };
+}
+
 function todayInZone() {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: state.config?.timeZone || 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
   const day = Object.fromEntries(parts.map(part => [part.type, part.value]));
@@ -62,7 +110,7 @@ function renderNotice(data: DashboardData) {
     notice.append(heading, ` ${t('Use “Dispositivos” para conectar o S3-WIFI-ST. Os números exibidos nesta prévia não são do seu inversor.')}`);
     notice.hidden = false;
   } else if (data.error) {
-    notice.textContent = `${t(data.error)} ${data.inverter ? t('Exibindo a última leitura válida.') : t('Verifique a configuração do coletor.')}`;
+    notice.textContent = `${t(data.error)} ${data.inverter ? t('Exibindo a última leitura válida.') : t('A reconexão automática continuará em segundo plano.')}`;
     notice.hidden = false;
   } else notice.hidden = true;
 }
@@ -421,7 +469,7 @@ async function load(force = false) {
   $('refresh').disabled = true;
   try {
     const url = `/api/dashboard?period=${state.period}&date=${requestedDate}${force ? '&refresh=1' : ''}`;
-    const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(4500) });
+    const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(force ? 25000 : 4500) });
     const data = await response.json() as DashboardData;
     if (!response.ok) { serverData = data; throw new Error(data.error || 'Painel indisponível.'); }
     if (token !== state.loadToken) return;
@@ -456,6 +504,7 @@ async function start() {
   setLanguage(initialLanguage);
   (document.querySelector('link[rel="manifest"]') as HTMLLinkElement).href = initialLanguage === 'en' ? '/manifest.en.webmanifest' : '/manifest.webmanifest';
   translateStatic();
+  const navigation = setupNavigation();
   $('language').value = initialLanguage;
   $('language').addEventListener('change', () => {
     const next = $('language').value === 'en' ? 'en' : 'pt-BR';
@@ -463,6 +512,7 @@ async function start() {
     (document.querySelector('link[rel="manifest"]') as HTMLLinkElement).href = next === 'en' ? '/manifest.en.webmanifest' : '/manifest.webmanifest';
     localStorage.setItem('helios-language', next);
     translateStatic();
+    navigation.refresh();
     if (state.data) render(state.data);
     if (state.calendarData) { renderCalendar(state.calendarData); renderForecast(state.calendarData); }
     if (state.wizardOpen && !$('wizard-auth').hidden) setText('selected-device', `${$('setup-ip').value} · MAC ${state.selectedMac || t('indisponível')}`);
@@ -614,9 +664,10 @@ async function start() {
     finally { button.disabled = false; }
   });
   await load();
+  navigation.sync();
   void loadCalendar();
   void primeSnapshots();
-  if (state.config.canManage && !state.usingCached && (!state.config.configured || state.config.needsPassword || (state.data?.error && !state.data?.inverter))) openWizard();
+  if (state.config.canManage && !state.usingCached && ((!state.config.configured && !state.config.hasPassword) || state.config.needsPassword)) openWizard();
   if ('serviceWorker' in navigator) {
     try { await navigator.serviceWorker.register('/sw.js'); }
     catch (error) { console.warn('Cache offline indisponível:', error); }

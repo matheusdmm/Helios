@@ -9,6 +9,7 @@ import readline from 'node:readline';
 import { once } from 'node:events';
 import { readS3 } from './lib/s3.ts';
 import { discoverS3, probeS3 } from './lib/discovery.ts';
+import { recoverS3 } from './lib/recovery.ts';
 import { buildInsights, shiftDay, summarizeDays } from './lib/insights.ts';
 import { buildForecast } from './lib/planning.ts';
 import { chartSeries } from './lib/chart.ts';
@@ -48,9 +49,9 @@ const config = {
 };
 try {
   const saved = JSON.parse(readFileSync(settingsFile, 'utf8'));
-  if (typeof saved.s3Ip === 'string') config.s3Ip = saved.s3Ip;
+  if (typeof saved.s3Ip === 'string' && saved.s3Ip) config.s3Ip = saved.s3Ip;
   if (typeof saved.s3User === 'string') config.s3User = saved.s3User;
-  if (typeof saved.s3Password === 'string') config.s3Password = saved.s3Password;
+  if (typeof saved.s3Password === 'string' && saved.s3Password) config.s3Password = saved.s3Password;
   if (typeof saved.s3Mac === 'string') config.s3Mac = saved.s3Mac;
   if (Number.isFinite(saved.tariffBrlPerKwh) && saved.tariffBrlPerKwh >= 0) config.tariffBrlPerKwh = saved.tariffBrlPerKwh;
 } catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -69,6 +70,9 @@ function dateInZone(timestamp = Date.now()) {
 let latest: Sample | null = null;
 let lastError: string | null = null;
 let polling: Promise<void> | null = null;
+let lastRecoveryScanAt = 0;
+let consecutiveFailures = 0;
+const recoveryScanIntervalMs = 120000;
 
 function isLocalRequest(req) {
   return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
@@ -94,21 +98,43 @@ async function recordConnection(ok: boolean, at = Date.now()) {
 }
 
 async function poll() {
-  if (!config.s3Ip || polling) return polling;
+  if ((!config.s3Ip && !config.s3Password) || polling) return polling;
   if (!config.s3Password) {
     lastError = 'Informe a senha do coletor no painel para iniciar a leitura.';
     return null;
   }
   polling = (async () => {
     try {
-      const sample = await readS3(config);
+      let sample: Sample;
+      try {
+        if (!config.s3Ip) throw new Error('O coletor ainda não foi localizado na rede.');
+        sample = await readS3(config);
+        if (latest?.sn && sample.sn !== latest.sn) throw new Error('O IP salvo respondeu com outro inversor.');
+      } catch (readError) {
+        if (Date.now() - lastRecoveryScanAt < recoveryScanIntervalMs) throw readError;
+        lastRecoveryScanAt = Date.now();
+        let recovered;
+        try { recovered = await recoverS3(config, latest?.sn || null); }
+        catch { throw readError; }
+        if (!recovered) throw readError;
+        config.s3Ip = recovered.ip;
+        config.s3Mac = recovered.mac;
+        await saveSettings();
+        sample = recovered.sample;
+        console.log(`[S3] Coletor reencontrado em ${recovered.ip}.`);
+      }
       latest = sample;
       lastError = null;
+      consecutiveFailures = 0;
       await storeSample(sample);
     } catch (error) {
       lastError = error.message;
       console.error(`[S3] ${lastError}`);
       try { await recordConnection(false); } catch (logError) { console.error(logError); }
+      const failedAttempt = ++consecutiveFailures;
+      if (failedAttempt <= 2) setTimeout(() => {
+        if (consecutiveFailures === failedAttempt) void poll();
+      }, failedAttempt * 15000);
     } finally { polling = null; }
   })();
   return polling;
@@ -270,9 +296,11 @@ export const handleRequest = async (req, res) => {
       config.s3Ip = ip;
       config.s3Password = password;
       config.s3Mac = mac;
+      lastRecoveryScanAt = 0;
       await saveSettings();
       latest = sample;
       lastError = null;
+      consecutiveFailures = 0;
       await storeSample(sample);
       return json(res, 200, { saved: true, connected: true, error: null });
     }
@@ -312,7 +340,7 @@ export const handleRequest = async (req, res) => {
       return json(res, 200, await importSamples(samples));
     }
     if (req.method !== 'GET') return json(res, 405, { error: 'Método não permitido.' });
-    if (url.pathname === '/api/config') return json(res, 200, { configured: Boolean(config.s3Ip), needsPassword: Boolean(config.s3Ip) && !config.s3Password, ip: config.s3Ip, mac: config.s3Mac, timeZone: config.timeZone, tariffBrlPerKwh: config.tariffBrlPerKwh, canManage: isLocalRequest(req) });
+    if (url.pathname === '/api/config') return json(res, 200, { configured: Boolean(config.s3Ip), hasPassword: Boolean(config.s3Password), needsPassword: Boolean(config.s3Ip) && !config.s3Password, ip: config.s3Ip, mac: config.s3Mac, timeZone: config.timeZone, tariffBrlPerKwh: config.tariffBrlPerKwh, canManage: isLocalRequest(req) });
     if (url.pathname === '/api/export.csv') {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'Exportação permitida apenas neste computador.' });
       const scope = ['month', 'summary'].includes(url.searchParams.get('scope')) ? url.searchParams.get('scope') : 'all';
@@ -352,7 +380,7 @@ export const handleRequest = async (req, res) => {
       const requestedPeriod = url.searchParams.get('period');
       const period: 'day' | 'month' | 'year' = requestedPeriod === 'month' || requestedPeriod === 'year' ? requestedPeriod : 'day';
       const date = /^20\d{2}-\d{2}-\d{2}$/.test(url.searchParams.get('date') || '') ? url.searchParams.get('date') : dateInZone();
-      if (!config.s3Ip) return json(res, 200, demo(period, date));
+      if (!config.s3Ip && !config.s3Password) return json(res, 200, demo(period, date));
       if (url.searchParams.get('refresh') === '1') await poll();
       if (!latest && !polling) await poll();
       const today = dateInZone();
@@ -410,7 +438,7 @@ async function startServer() {
   if (config.s3Ip) latest = await loadLatestSample();
   server.listen(config.port, config.host, () => {
     console.log(`Painel Solis: ${secure ? 'https' : 'http'}://${config.host}:${config.port}`);
-    if (!config.s3Ip) console.log('Prévia com dados de exemplo. Use “Localizar coletor” no painel para conectar.');
+    if (!config.s3Ip && !config.s3Password) console.log('Prévia com dados de exemplo. Use “Localizar coletor” no painel para conectar.');
     else void poll();
     setInterval(() => { void poll(); }, 60000);
   });

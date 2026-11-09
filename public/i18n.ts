@@ -75,6 +75,7 @@ const english: Record<string, string> = {
   'Use “Dispositivos” para conectar o S3-WIFI-ST. Os números exibidos nesta prévia não são do seu inversor.': 'Use “Devices” to connect the S3-WIFI-ST. The figures in this preview are not from your inverter.',
   'Exibindo a última leitura válida.': 'Showing the last valid reading.',
   'Verifique a configuração do coletor.': 'Check the data logger settings.',
+  'A reconexão automática continuará em segundo plano.': 'Automatic reconnection will continue in the background.',
   'indisponível': 'unavailable', 'Buscando na rede local…': 'Scanning the local network…', 'A busca falhou.': 'The scan failed.',
   'uma rede local detectada': 'a detected local network', 'MAC compartilhado por outros IPs': 'MAC shared by other IP addresses',
   'mesmo MAC salvo': 'same saved MAC', 'Coletor Solis': 'Solis data logger', 'sem interface HTTP': 'no HTTP interface',
