@@ -291,20 +291,46 @@ function renderCalendar(data: CalendarData) {
 
 function renderForecast(data: CalendarData) {
   const forecast = data.forecast;
-  const ready = forecast?.days?.length > 0;
-  setText('forecast-total', ready ? number(forecast.totalKwh, 1) : '—');
-  setText('forecast-range', ready ? `${number(forecast.lowTotalKwh, 1)}–${number(forecast.highTotalKwh, 1)}` : '—');
+  const weather = data.weather?.status === 'ready' ? data.weather : null;
+  const days: ReadonlyArray<{ date: string; energyKwh: number | null; cloudPct?: number | null; minC?: number; maxC?: number }> = weather?.days ?? forecast?.days ?? [];
+  const total = weather ? weather.totalKwh : forecast?.totalKwh;
+  const count = weather ? weather.estimatedDays : days.length;
+  setText('forecast-horizon', weather ? t('PRÓXIMOS DIAS') : t('PRÓXIMOS 7 DIAS'));
+  setText('forecast-source', weather ? 'OpenWeather' : t('Estimativa pelo histórico'));
+  setText('forecast-total', total == null ? '—' : number(total, 1));
+  setText('forecast-total-unit', count === 0 ? 'kWh' : count === 1 ? t('kWh em 1 dia') : tf('kWh em {days} dias', { days: count }));
+  setText('forecast-average', total == null ? '—' : number(weather ? weather.averageKwh : total / count, 1));
+  $('forecast-history-range').hidden = Boolean(weather);
+  setText('forecast-range', forecast?.lowTotalKwh == null ? '—' : `${number(forecast.lowTotalKwh, 1)}–${number(forecast.highTotalKwh, 1)}`);
   const root = $('forecast-days');
   root.replaceChildren();
-  if (ready) for (const day of forecast.days) {
+  root.classList.toggle('weather-days', Boolean(weather));
+  for (const day of days) {
     const item = document.createElement('div'); item.className = 'forecast-day'; item.setAttribute('role', 'listitem');
     const label = document.createElement('span'); label.textContent = new Intl.DateTimeFormat(getLanguage(), { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${day.date}T12:00:00`));
-    const value = document.createElement('strong'); value.textContent = `${number(day.energyKwh, 1)} kWh`;
-    item.append(label, value); root.append(item);
+    const value = document.createElement('strong'); value.textContent = day.energyKwh == null ? '—' : `${number(day.energyKwh, 1)} kWh`;
+    item.append(label, value);
+    if (weather) {
+      const conditions = document.createElement('small');
+      const temperatures = `${number(day.minC, 0)}–${number(day.maxC, 0)} °C`;
+      conditions.textContent = day.cloudPct == null ? temperatures : `${temperatures} · ${tf('{clouds}% de nuvens', { clouds: number(day.cloudPct, 0) })}`;
+      item.append(conditions);
+    }
+    root.append(item);
   }
-  setText('forecast-note', data.mode === 'demo' ? t('Conecte o coletor para calcular uma previsão com seus dados.')
-    : ready ? tf('Base: {days} dias registrados nos últimos 30. Mediana e faixa de 20% a 80%; sem previsão do tempo. Leituras incompletas podem reduzir a estimativa.', { days: forecast.daysUsed })
-    : tf('São necessários 5 dias registrados nos últimos 30 para estimar a geração. Disponíveis: {days}.', { days: forecast?.daysUsed || 0 }));
+  const historyNote = data.mode === 'demo' ? t('Conecte o coletor para calcular uma previsão com seus dados.')
+    : tf('São necessários 5 dias registrados nos últimos 30 para estimar a geração. Disponíveis: {days}.', { days: forecast?.daysUsed || 0 });
+  let note = historyNote;
+  if (weather && forecast?.days.length) {
+    note = tf('A nebulosidade diurna ajusta a geração entre os percentis 20 e 80 de {days} dias registrados nos últimos 30. Estimativa aproximada.', { days: forecast.daysUsed });
+  } else if (!weather && days.length) {
+    note = tf('Base: {days} dias registrados nos últimos 30. Mediana e faixa de 20% a 80%. Leituras incompletas podem reduzir a estimativa.', { days: forecast.daysUsed });
+  }
+  if (data.weather?.status === 'invalid-location') note = `${t('Confira as coordenadas da OpenWeather no arquivo .env.')} ${note}`;
+  if (data.weather?.status === 'unauthorized') note = `${t('A OpenWeather recusou o acesso. Confira a chave no arquivo .env.')} ${note}`;
+  if (data.weather?.status === 'unavailable') note = `${t('Previsão da OpenWeather indisponível no momento.')} ${note}`;
+  setText('forecast-note', note);
+  $('forecast-credit').hidden = !weather;
 }
 
 async function loadCalendar() {
@@ -317,7 +343,7 @@ async function loadCalendar() {
     if (token !== state.calendarToken) return;
     state.calendarData = data;
     if (data.mode === 'local') {
-      try { localStorage.setItem(`helios-calendar-${month}`, JSON.stringify(data)); }
+      try { localStorage.setItem(`helios-calendar-${month}`, JSON.stringify({ ...data, weather: undefined })); }
       catch { /* O calendário continua disponível nesta sessão. */ }
     }
     renderCalendar(data); renderForecast(data);

@@ -208,17 +208,19 @@
                 <section class="forecast-section" aria-labelledby="forecast-title">
                     <div class="section-heading">
                         <div>
-                            <p class="eyebrow">PRÓXIMOS 7 DIAS</p>
+                            <p id="forecast-horizon" class="eyebrow">PRÓXIMOS DIAS</p>
                             <h2 id="forecast-title">Previsão de geração</h2>
                         </div>
-                        <span class="section-note">Estimativa pelo histórico</span>
+                        <span id="forecast-source" class="section-note">Estimativa pelo histórico</span>
                     </div>
                     <div class="forecast-summary">
-                        <div><span>TOTAL ESTIMADO</span><strong id="forecast-total">—</strong><small>kWh em 7 dias</small></div>
-                        <div><span>FAIXA HISTÓRICA</span><strong id="forecast-range">—</strong><small>kWh em 7 dias</small></div>
+                        <div><span>TOTAL ESTIMADO</span><strong id="forecast-total">—</strong><small id="forecast-total-unit">kWh</small></div>
+                        <div><span>MÉDIA ESTIMADA</span><strong id="forecast-average">—</strong><small>kWh/dia</small></div>
+                        <div id="forecast-history-range"><span>FAIXA HISTÓRICA</span><strong id="forecast-range">—</strong><small>kWh em 7 dias</small></div>
                     </div>
                     <div id="forecast-days" class="forecast-days" role="list" aria-label="Previsão diária"></div>
                     <p id="forecast-note" class="section-footnote">Aguardando histórico para calcular a previsão.</p>
+                    <p id="forecast-credit" class="section-footnote" hidden><a href="https://openweathermap.org/" target="_blank" rel="noopener noreferrer"><img src="/openweather-logo.png" width="72" height="32" loading="lazy" alt=""><span>Dados meteorológicos fornecidos pela OpenWeather</span></a></p>
                 </section>
 
                 <section class="temperature-section" aria-labelledby="temperature-title">

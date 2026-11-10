@@ -16,6 +16,12 @@ Open `http://127.0.0.1:3000`. Click **Devices**, select the data logger, and ent
 
 Helios reads `http://LOGGER_IP/inverter.cgi` about once a minute and saves readings in `data/`. Without a configured logger, the dashboard shows labeled sample data. If a connected logger stops responding, Helios keeps the last reading and scans the local network automatically (at most once every two minutes). When it identifies the same collector at a new IP, it reconnects with the locally saved password and updates the saved IP. The computer must remain on the same local network; this does not reconnect a disconnected Wi-Fi connection.
 
+## Weather and production forecast
+
+To enable the [OpenWeather 5-day forecast](https://openweathermap.org/api/forecast5), set `OPENWEATHER_API_KEY`, `OPENWEATHER_LAT`, and `OPENWEATHER_LON` in `.env` and restart Helios. Use your [OpenWeather API key](https://home.openweathermap.org/api_keys) and the solar panels' coordinates in decimal degrees with a dot. Set `TIME_ZONE` to the panels' local time zone. The key stays on the server.
+
+Open **Histórico → Previsão de geração** (**History → Production forecast**). Helios shows temperatures and daytime cloud cover for complete upcoming days in the 3-hour forecast. With at least five recorded days in the last 30, it estimates daily generation between the historical 20th and 80th percentiles, with clearer skies closer to the upper end. It displays the sum and daily average of those estimates. Weather remains visible with less history, and Helios uses the existing historical projection if weather is unavailable.
+
 ## Notes
 
 - The logger and computer must be on the same local network. If discovery fails, enter the logger's IP manually.
@@ -42,3 +48,5 @@ The executable starts with sample data. To configure a logger or change the port
 ## Credit
 
 The logo uses [House Martell.svg](https://awoiaf.westeros.org/index.php/File:House_Martell.svg) by [Abjiklam](https://awoiaf.westeros.org/index.php/User:Abjiklam), licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). The app icons use the same license.
+
+Weather data and the weather provider logo are from [OpenWeather](https://openweathermap.org/). The [logo copy](https://github.com/theothernt/AerialViews/blob/master/docs/images/openweather_logo.png) was sourced from Aerial Views.

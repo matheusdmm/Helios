@@ -1,4 +1,4 @@
-const CACHE = 'helios-shell-v5';
+const CACHE = 'helios-shell-v6';
 const SHELL = ['/', '/app.js', '/styles.css', '/helios.css', '/favicon.svg', '/manifest.webmanifest', '/manifest.en.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', event => {

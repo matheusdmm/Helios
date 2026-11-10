@@ -11,7 +11,8 @@ import { readS3 } from './lib/s3.ts';
 import { discoverS3, probeS3 } from './lib/discovery.ts';
 import { recoverS3 } from './lib/recovery.ts';
 import { buildInsights, shiftDay, summarizeDays } from './lib/insights.ts';
-import { buildForecast } from './lib/planning.ts';
+import { buildForecast, buildWeatherProjection } from './lib/planning.ts';
+import { createWeatherForecast } from './lib/weather.ts';
 import { chartSeries } from './lib/chart.ts';
 import { CSV_HEADER, SUMMARY_HEADER, csvLine, summaryLine, parseSolisCsv } from './lib/csv.ts';
 import type { ConnectionEvent, Reading, Sample } from './lib/types.ts';
@@ -66,6 +67,13 @@ function dateInZone(timestamp = Date.now()) {
   const p = Object.fromEntries(parts.map(part => [part.type, part.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }
+
+const getWeatherForecast = createWeatherForecast(
+  process.env.OPENWEATHER_API_KEY?.trim() || '',
+  process.env.OPENWEATHER_LAT?.trim() || '',
+  process.env.OPENWEATHER_LON?.trim() || '',
+  dateInZone,
+);
 
 let latest: Sample | null = null;
 let lastError: string | null = null;
@@ -261,6 +269,7 @@ const assets = new Map([
   ['/sw.js', ['sw.js', 'text/javascript; charset=utf-8']],
   ['/icon-192.png', ['icon-192.png', 'image/png']],
   ['/icon-512.png', ['icon-512.png', 'image/png']],
+  ['/openweather-logo.png', ['openweather-logo.png', 'image/png']],
 ]);
 
 export const handleRequest = async (req, res) => {
@@ -403,14 +412,17 @@ export const handleRequest = async (req, res) => {
       const today = dateInZone();
       const requestedMonth = url.searchParams.get('month') || today.slice(0, 7);
       const month = /^20\d{2}-(0[1-9]|1[0-2])$/.test(requestedMonth) ? requestedMonth : today.slice(0, 7);
-      if (!config.s3Ip) return json(res, 200, { mode: 'demo', month, today, days: [], forecast: null });
-      const [monthRows, recentRows] = await Promise.all([
-        samplesFor('month', `${month}-01`), recentSamples(today, 30),
+      const mode = config.s3Ip ? 'local' : 'demo';
+      const [monthRows, recentRows, weather] = await Promise.all([
+        mode === 'local' ? samplesFor('month', `${month}-01`) : [],
+        mode === 'local' ? recentSamples(today, 30) : [],
+        getWeatherForecast(),
       ]);
       const days = [...summarizeDays(monthRows, dateInZone).values()]
         .sort((a, b) => a.date.localeCompare(b.date))
         .map(day => ({ date: day.date, energyKwh: day.energyKwh, samples: day.samples }));
-      return json(res, 200, { mode: 'local', month, today, days, forecast: buildForecast(recentRows, today, dateInZone) });
+      const forecast = mode === 'local' ? buildForecast(recentRows, today, dateInZone) : null;
+      return json(res, 200, { mode, month, today, days, forecast, weather: buildWeatherProjection(weather, forecast, today) });
     }
     const asset = assets.get(url.pathname);
     if (!asset) return json(res, 404, { error: 'Página não encontrada.' });

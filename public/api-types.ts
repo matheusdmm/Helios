@@ -1,6 +1,6 @@
 import type { Sample } from '../lib/types.ts';
 import type { buildInsights } from '../lib/insights.ts';
-import type { buildForecast } from '../lib/planning.ts';
+import type { buildForecast, buildWeatherProjection } from '../lib/planning.ts';
 
 export type Period = 'day' | 'month' | 'year';
 
@@ -33,6 +33,7 @@ export interface CalendarData {
   today?: string;
   days: Array<{ date: string; energyKwh: number | null; samples: number }>;
   forecast: ReturnType<typeof buildForecast> | null;
+  weather?: ReturnType<typeof buildWeatherProjection>;
 }
 
 export interface Device {

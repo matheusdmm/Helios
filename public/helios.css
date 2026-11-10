@@ -282,16 +282,24 @@ button.calendar-day:hover { transform: translateY(-2px); outline: 2px solid var(
 .calendar-day.selected { outline: 2px solid var(--ink); outline-offset: 1px; }
 .calendar-selection { min-height: 1.5em; margin: 10px 0 0; font-size: 12px; color: var(--ink); }
 .forecast-section { padding: 36px 0 39px; }
-.forecast-summary { display: flex; gap: 45px; margin-top: 27px; }
+.forecast-summary { display: flex; flex-wrap: wrap; gap: 20px 45px; margin-top: 27px; }
 .forecast-summary>div { display: flex; flex-direction: column; gap: 6px; }
 .forecast-summary span { color: var(--muted); font: 700 10px "Courier New", ui-monospace, monospace; }
 .forecast-summary strong { font-size: 32px; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
 .forecast-summary small { color: var(--muted); font-size: 11px; }
 .forecast-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 28px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+@media (min-width: 761px) {
+  .forecast-days.weather-days { display: flex; }
+  .weather-days .forecast-day { flex: 1; min-width: 0; }
+}
 .forecast-day { display: flex; flex-direction: column; gap: 15px; padding: 13px 8px 15px; border-right: 1px solid var(--line); }
 .forecast-day:last-child { border-right: 0; }
 .forecast-day span { color: var(--muted); font-size: 10px; text-transform: capitalize; }
 .forecast-day strong { font-size: 13px; white-space: nowrap; }
+.forecast-day small { color: var(--muted); font-size: 11px; }
+#forecast-credit a { display: inline-flex; align-items: center; gap: 10px; }
+#forecast-credit img { background: white; }
+#forecast-credit span { text-decoration: underline; }
 .legend-temp { background: var(--accent); }
 .legend-power { background: var(--ink); }
 .temperature-line { stroke: var(--accent); }
