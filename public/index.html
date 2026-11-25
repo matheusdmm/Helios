@@ -12,7 +12,7 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="/helios.css">
-    <script src="/app.js" defer></script>
+    <script type="module" src="/app.js"></script>
 </head>
 
 <body>
@@ -26,6 +26,7 @@
                 <a class="nav-link" href="#analises"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 19h17"/><path d="m8 15 4-5 3 2 5-6"/></svg>Análises</a>
                 <a class="nav-link" href="#historico"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Histórico</a>
                 <a class="nav-link" href="#dispositivo"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Equipamento</a>
+                <a class="nav-link" href="#logs" data-desktop-only hidden><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 9 3 3-3 3m6 0h4"/></svg>Logs</a>
             </nav>
             <div class="sidebar-bottom">
                 <div class="sidebar-caption">brilhe<br>como<br>o<br>sol.</div>
@@ -52,6 +53,7 @@
                 <a href="#analises">Análises</a>
                 <a href="#historico">Histórico</a>
                 <a href="#dispositivo">Equipamento</a>
+                <a href="#logs" data-desktop-only hidden>Logs</a>
             </nav>
 
             <div class="page-content">
@@ -302,6 +304,7 @@
                     <div class="data-actions"><a href="/api/export.csv?scope=all" download>Backup completo</a><a
                             href="/api/export.csv?scope=month" download>Backup deste mês</a><a
                             href="/api/export.csv?scope=summary" download>Resumo diário</a></div>
+                    <p id="export-message" class="section-footnote" role="status" hidden></p>
                     <form id="import-form" class="import-form"><label for="import-file">Importar backup CSV</label>
                         <div><input id="import-file" type="file" accept=".csv,text/csv" required><button
                                 type="submit">Importar leituras</button></div><span id="import-message"
@@ -358,6 +361,16 @@
                             exigem outro método de leitura.</p>
                     </section>
                 </div>
+                <section id="logs" class="logs-section" aria-labelledby="logs-title" data-desktop-only hidden>
+                    <div class="section-heading">
+                        <div>
+                            <h2 id="logs-title">Logs da sessão</h2>
+                            <p class="section-footnote">Até 300 mensagens da sessão atual, das mais recentes às mais antigas.</p>
+                        </div>
+                    </div>
+                    <p id="logs-status" class="section-footnote" role="status" hidden></p>
+                    <ol id="log-entries" class="log-entries" aria-label="Mensagens da sessão" tabindex="0" hidden></ol>
+                </section>
                 <footer class="footer"><strong>HELIOS</strong><span>Painel local · Dados lidos diretamente do coletor na
                         sua rede</span></footer>
             </div>

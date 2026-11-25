@@ -24,6 +24,28 @@ button:disabled { cursor: wait; }
 :focus-visible { outline: 2px solid #a67d28; outline-offset: 3px; }
 .offline-banner { padding: 13px 16px; margin-bottom: 24px; border-left: 3px solid var(--accent); background: #eee1bf; color: #4b422d; font-size: 12px; line-height: 1.5; }
 .offline-banner[hidden], [hidden] { display: none !important; }
+.logs-section { padding: 26px 0 36px; border-top: 1px solid var(--line); }
+.log-entries {
+  max-height: 380px;
+  overflow: auto;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--paper-raised);
+  font: 12px/1.55 ui-monospace, Consolas, monospace;
+}
+.log-entries li { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); gap: 12px; padding: 8px 12px; }
+.log-entries li + li { border-top: 1px solid var(--line); }
+.log-entries time { color: var(--muted); }
+.log-entries strong { color: #715019; min-width: 5ch; }
+.log-entries [data-level="error"] strong { color: var(--error); }
+.log-entries .log-message { overflow-wrap: anywhere; white-space: pre-wrap; }
+.data-actions a[aria-disabled="true"] { pointer-events: none; opacity: .55; }
+@media (max-width: 540px) {
+  .log-entries li { grid-template-columns: max-content 1fr; column-gap: 10px; row-gap: 2px; }
+  .log-entries .log-message { grid-column: 1 / -1; }
+}
 @media(max-width:760px) { .topbar .sync-label { display: block; max-width: 135px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; } }
 
 .app-shell { grid-template-columns: 252px minmax(0, 1fr); }
