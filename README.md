@@ -2,17 +2,15 @@
 
 Helios is a local dashboard for the Solis S6-GR1P6K inverter with an S3-WIFI-ST data logger. It shows live power, production history, and estimates from readings saved on your computer.
 
-## Run locally
-
-Install [Bun](https://bun.sh/docs/installation) 1.4 or newer. Connect your computer to the same network as the data logger, then run:
+## Run
+Install Go 1.26 or newer. Connect your computer to the same network as the data logger, then run from the project directory:
 
 ```sh
 cp .env.example .env
-bun install
-bun run start
+go run ./cmd/helios
 ```
 
-Open `http://127.0.0.1:3000`. Click **Devices**, select the data logger, and enter the password for its local web page. You can also set `S3_IP` and `S3_PASSWORD` in `.env`; with only `S3_PASSWORD`, Helios discovers the logger automatically. Credentials entered in the panel are saved in `data/local-settings.json` and take precedence over nonempty `.env` values on later starts.
+Open the compiled application. Click **Devices**, select the data logger, and enter the password for its local web page. You can also set `S3_IP` and `S3_PASSWORD` in `.env`; with only `S3_PASSWORD`, Helios discovers the logger automatically. Credentials entered in the panel are saved in `data/local-settings.json` and take precedence over nonempty `.env` values on later starts.
 
 Helios reads `http://LOGGER_IP/inverter.cgi` about once a minute and saves readings in `data/`. Without a configured logger, the dashboard shows labeled sample data. If a connected logger stops responding, Helios keeps the last reading and scans the local network automatically (at most once every two minutes). When it identifies the same collector at a new IP, it reconnects with the locally saved password and updates the saved IP. The computer must remain on the same local network; this does not reconnect a disconnected Wi-Fi connection.
 
@@ -20,7 +18,7 @@ Helios reads `http://LOGGER_IP/inverter.cgi` about once a minute and saves readi
 
 To enable the [OpenWeather 5-day forecast](https://openweathermap.org/api/forecast5), set `OPENWEATHER_API_KEY`, `OPENWEATHER_LAT`, and `OPENWEATHER_LON` in `.env` and restart Helios. Use your [OpenWeather API key](https://home.openweathermap.org/api_keys) and the solar panels' coordinates in decimal degrees with a dot. Set `TIME_ZONE` to the panels' local time zone. The key stays on the server.
 
-Open **Histórico → Previsão de geração** (**History → Production forecast**). Helios shows temperatures and daytime cloud cover for complete upcoming days in the 3-hour forecast. With at least five recorded days in the last 30, it estimates daily generation between the historical 20th and 80th percentiles, with clearer skies closer to the upper end. It displays the sum and daily average of those estimates. Weather remains visible with less history, and Helios uses the existing historical projection if weather is unavailable.
+Open **Histórico -> Previsão de geração** (**History -> Production forecast**). Helios shows temperatures and daytime cloud cover for complete upcoming days in the 3-hour forecast. With at least five recorded days in the last 30, it estimates daily generation between the historical 20th and 80th percentiles, with clearer skies closer to the upper end. It displays the sum and daily average of those estimates. Weather remains visible with less history, and Helios uses the existing historical projection if weather is unavailable.
 
 ## Notes
 
@@ -33,17 +31,16 @@ Open **Histórico → Previsão de geração** (**History → Production forecas
 ## Development
 
 ```sh
-bun run build   # Build the browser code
-bun run check   # Check types
-bun test        # Run tests
-bun run dev     # Watch the server
+go test ./...   # Test the backend, embedded assets, and Windows desktop integration
+go vet ./...
+go build -o dist/helios-web.exe ./cmd/helios   # Build the web server on Windows
 ```
+
+The browser loads the JavaScript modules in `public/` directly. Rebuild the Go binary after changing an embedded asset. Use `-dir PATH` to point the web server to a different directory for `.env` and `data/`. With Node.js 22 or newer, run the optional browser-storage unit tests with `node --test tests/offline-store.test.mjs`.
 
 ## Windows executable
 
-Run `bun run build:exe` on Windows. The result is `dist/helios.exe`, with the browser files embedded and the same Martell sun icon as the dashboard. Copy that one file to a writable folder on the target computer and double-click it. Bun and `node_modules` are not needed there. Open `http://127.0.0.1:3000` in a browser; keep the console window open while using the dashboard.
-
-The executable starts with sample data. To configure a logger or change the port, place a `.env` file beside `helios.exe` (you can copy `.env.example` as a starting point). Settings and readings are stored in a `data/` folder beside the executable. Choose a folder where your Windows user can write files.
+With Go 1.26+ installed on Windows, run `./desktop/build.ps1` in PowerShell. Copy `dist/helios.exe` to a writable folder and double-click it. Helios opens in a Wails window and runs the Go service in the same process. The target computer needs [Microsoft Edge WebView2 Runtime](https://v3.wails.io/guides/build/windows/#webview2-missing).
 
 ## Credit
 

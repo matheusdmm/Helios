@@ -1,5 +1,8 @@
-const CACHE = 'helios-shell-v6';
-const SHELL = ['/', '/app.js', '/styles.css', '/helios.css', '/favicon.svg', '/manifest.webmanifest', '/manifest.en.webmanifest', '/icon-192.png', '/icon-512.png'];
+const CACHE = 'helios-shell-v8';
+const SHELL = [
+  '/', '/app.js', '/desktop.js', '/i18n.js', '/offline-store.js', '/styles.css', '/helios.css',
+  '/favicon.svg', '/manifest.webmanifest', '/manifest.en.webmanifest', '/icon-192.png', '/icon-512.png', '/openweather-logo.png',
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

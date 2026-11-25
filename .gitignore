@@ -1,8 +1,9 @@
 .env
 node_modules/
 data/
-public/app.js
 dist/
+desktop/payload/
+desktop/*.syso
 .bun-tmp/
 certs/
 tools/
